@@ -1,0 +1,1 @@
+{"name":"regicide-private","version":"1.0.0","private":true,"description":"Private cooperative two-player card game","scripts":{"start":"node server.js"},"engines":{"node":">=18"},"dependencies":{"ws":"^8.22.2"}}
