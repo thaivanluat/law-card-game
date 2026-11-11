@@ -19,7 +19,7 @@ export class KnightActor extends Actor {
     super(scene, x, y, key, {
       depth: 15,
       originY: 1,
-      targetH: Math.min(scene.scale.height * 0.58, scene.scale.width * 0.38, 400),
+      targetH: Math.min(scene.scale.height * 0.4, scene.scale.width * 0.3, 320),
     });
     this.role = safe;
     this.isYou = isYou;

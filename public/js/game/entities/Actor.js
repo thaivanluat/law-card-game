@@ -48,10 +48,10 @@ export class Actor {
   startIdle() {
     this.stopIdle();
     if (this._busy) return;
+    // Breathe with Y only — scaleY-only tweens make sprites look "tall" on mobile
     this._idle = this.scene.tweens.add({
       targets: this.sprite,
       y: '-=5',
-      scaleY: this._baseScale * 1.015,
       duration: 1000 + Math.random() * 400,
       yoyo: true,
       repeat: -1,

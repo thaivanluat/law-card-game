@@ -46,7 +46,8 @@ export class BattleScene extends Phaser.Scene {
 
     const dungeonKey = this.textures.exists('dungeon') ? 'dungeon' : null;
     if (dungeonKey) {
-      this.bg = this.add.image(width / 2, height / 2, dungeonKey).setDisplaySize(width, height).setDepth(0);
+      this.bg = this.add.image(width / 2, height / 2, dungeonKey).setDepth(0);
+      this._fitBg(width, height);
     } else {
       this.bg = this.add.rectangle(width / 2, height / 2, width, height, 0x0b1210).setDepth(0);
     }
@@ -108,17 +109,33 @@ export class BattleScene extends Phaser.Scene {
   }
 
   _floorYFor(height) {
-    // Leave ~28–34% of the canvas for the floating hand overlay
-    if (height < 380) return height * 0.52;
-    if (height < 520) return height * 0.55;
-    return height * 0.58;
+    // Room for hand overlay below + attack intent above
+    if (height < 380) return height * 0.56;
+    if (height < 520) return height * 0.58;
+    return height * 0.6;
+  }
+
+  /** Cover viewport without stretching the dungeon (crop edges if needed). */
+  _fitBg(width, height) {
+    if (!this.bg?.setDisplaySize || !this.bg.texture) return;
+    const src = this.bg.texture.getSourceImage?.() || this.bg.texture.source?.[0]?.image;
+    const tw = src?.width || this.bg.width || width;
+    const th = src?.height || this.bg.height || height;
+    if (!tw || !th) {
+      this.bg.setDisplaySize(width, height);
+      return;
+    }
+    const scale = Math.max(width / tw, height / th);
+    this.bg.setDisplaySize(tw * scale, th * scale);
   }
 
   _actorHeights() {
     const { width, height } = this.scale;
-    // Prefer big readable fighters on phones — lean used to shrink them too much
-    const bossH = Math.min(height * 0.7, width * 0.5, 560);
-    const heroH = Math.min(height * 0.58, width * 0.38, 400);
+    // Cap height so head + ⚔ intent fit under the top HUD (prevents off-screen intent + tall stretch look)
+    const maxBoss = Math.max(160, height * 0.48 - 24);
+    const maxHero = Math.max(140, height * 0.4 - 20);
+    const bossH = Math.min(maxBoss, width * 0.4, 420);
+    const heroH = Math.min(maxHero, width * 0.3, 320);
     return { bossH, heroH };
   }
 
@@ -126,7 +143,7 @@ export class BattleScene extends Phaser.Scene {
     const { width, height } = gameSize;
     if (width < 2 || height < 2) return;
     if (this.bg?.setPosition) this.bg.setPosition(width / 2, height / 2);
-    if (this.bg?.setDisplaySize) this.bg.setDisplaySize(width, height);
+    this._fitBg(width, height);
     this.floorY = this._floorYFor(height);
     if (this._state) this.sync(this._state);
   }

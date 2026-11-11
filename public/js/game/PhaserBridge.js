@@ -85,10 +85,16 @@ class PhaserBridge {
 
   resize() {
     if (!this.game || !this.host) return;
-    const w = this.host.clientWidth;
-    const h = this.host.clientHeight;
+    const w = Math.round(this.host.clientWidth);
+    const h = Math.round(this.host.clientHeight);
     if (w < 2 || h < 2) return;
+    // Match buffer size to CSS box 1:1 — avoids tall/squashed sprites on mobile
     this.game.scale.resize(w, h);
+    const canvas = this.game.canvas;
+    if (canvas) {
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+    }
   }
 
   onSceneReady() {

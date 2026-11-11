@@ -34,7 +34,7 @@ export class BossActor extends Actor {
       originY: 1,
       // Art faces right; boss stands on the right, so flip to face the heroes.
       flipX: true,
-      targetH: Math.min(scene.scale.height * 0.62, 420),
+      targetH: Math.min(scene.scale.height * 0.45, scene.scale.width * 0.4, 420),
     });
     this.enemy = null;
     this._defeatTween = null;
@@ -64,30 +64,33 @@ export class BossActor extends Actor {
     const scene = this.scene;
     this.intent = scene.add.container(0, 0);
 
+    // Compact STS intent badge (bg keeps the number readable even if sword sheet is hard to see)
+    this.intentBg = scene.add.rectangle(0, 0, 64, 72, 0x1a0808, 0.88).setStrokeStyle(2, 0xc8372f);
+
     if (scene.textures.exists('hud:sword')) {
-      this.intentSword = scene.add.sprite(0, -10, 'hud:sword', 0).setOrigin(0.5);
+      this.intentSword = scene.add.sprite(0, -12, 'hud:sword', 0).setOrigin(0.5);
       // Tall sheet cell — show as compact STS intent icon
-      this.intentSword.setDisplaySize(46, 62);
+      this.intentSword.setDisplaySize(42, 56);
       if (scene.anims.exists('anim:hud:sword')) this.intentSword.play('anim:hud:sword');
     } else {
       this.intentSword = scene.add
-        .text(0, -10, '⚔', { fontSize: '28px', color: '#ff6b60' })
+        .text(0, -12, '⚔', { fontSize: '26px', color: '#ff6b60' })
         .setOrigin(0.5);
     }
 
     this.intentDmg = scene.add
-      .text(0, 22, '—', {
+      .text(0, 24, '—', {
         fontFamily: 'Georgia, serif',
-        fontSize: '22px',
+        fontSize: '24px',
         color: '#ffd0c8',
         fontStyle: 'bold',
         stroke: '#1a0505',
-        strokeThickness: 5,
+        strokeThickness: 6,
       })
       .setOrigin(0.5);
 
     this.intentShieldNote = scene.add
-      .text(0, 40, '', {
+      .text(0, 42, '', {
         fontFamily: 'Arial',
         fontSize: '11px',
         color: '#9ec8ff',
@@ -96,7 +99,8 @@ export class BossActor extends Actor {
       })
       .setOrigin(0.5);
 
-    this.intent.add([this.intentSword, this.intentDmg, this.intentShieldNote]);
+    this.intent.add([this.intentBg, this.intentSword, this.intentDmg, this.intentShieldNote]);
+    this.intent.setDepth(30);
   }
 
   /**
@@ -253,8 +257,21 @@ export class BossActor extends Actor {
 
   _layoutHud() {
     const h = this.sprite?.displayHeight || 220;
-    // Intent above head
-    this.intent.y = -h - 36;
+    const w = this.sprite?.displayWidth || 160;
+    // Keep ⚔ + damage fully on-screen (was clipped above the canvas)
+    const intentHalf = 40;
+    const topSafe = 52;
+    const rootY = this.root?.y || this._baseY || 300;
+    const minLocalY = -rootY + topSafe + intentHalf;
+    const preferY = -h - 44;
+    this.intent.y = Math.max(preferY, minLocalY);
+    // If clamped down onto the body, park badge left of the torso (STS-style)
+    if (this.intent.y > -h * 0.72) {
+      this.intent.x = -Math.max(72, w * 0.42);
+      this.intent.y = Math.min(-h * 0.55, minLocalY + 8);
+    } else {
+      this.intent.x = -Math.min(56, w * 0.28);
+    }
     // HP + immunity BELOW the character (feet at y=0)
     this.hpBar.y = 18;
     this.immRoot.y = 48;
